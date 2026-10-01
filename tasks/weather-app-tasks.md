@@ -399,8 +399,24 @@ final de aceite.
 
 ### T-35 — Validar responsividade
 - **Título:** Executar matriz de viewports do MVP.
-- **Descrição:** Criar cenários Playwright para 320, 768, 1024 e 1920 px.
-- **Critérios de aceite:** Em 320, 768, 1024 e 1920 px, `document.documentElement.scrollWidth <= document.documentElement.clientWidth`; input, opções, toggle e cinco dias permanecem visíveis e operáveis; as mesmas fixtures são usadas em cada viewport.
+- **Descrição:** Criar cenários Playwright para 320, 768, 1024 e 1920 px executando a jornada completa (busca → seleção → unidade → previsão) com as mesmas fixtures interceptadas por `page.route`.
+- **Matriz:**
+
+  | Viewport | Perfil         | Altura |
+  | -------- | -------------- | ------ |
+  | 320 px   | mobile pequeno | 640    |
+  | 768 px   | tablet         | 1024   |
+  | 1024 px  | desktop        | 768    |
+  | 1920 px  | desktop amplo  | 1080   |
+
+- **Critérios de aceite:**
+  - Em cada viewport, `document.documentElement.scrollWidth <= document.documentElement.clientWidth` é verificado no estado inicial, com a lista de opções aberta, após a seleção e após alternar a unidade.
+  - Input, botão `Buscar` e toggle °C/°F ficam visíveis e inteiramente dentro da largura do viewport.
+  - Cada opção da lista fica dentro do viewport e não corta texto (`scrollWidth <= clientWidth`), inclusive com nome de cidade e país longos sem espaços.
+  - Selecionar a cidade exibe o clima atual e os cinco dias, todos dentro da largura do viewport.
+  - Alternar para °F atualiza clima atual e previsão sem gerar rolagem horizontal.
+  - Uma nova busca com nome longo exibe o título quebrado dentro do viewport.
+  - As mesmas fixtures são usadas em todos os viewports e a matriz roda em todos os projetos do Playwright.
 - **Rastreabilidade:** NFR-02, NFR-03 / AC-11.
 - **Dependências:** T-31, T-32
 - **Arquivos prováveis:** `tests/e2e/responsive.spec.ts`
