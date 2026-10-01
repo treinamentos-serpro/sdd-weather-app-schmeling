@@ -38,8 +38,12 @@ export default function LocationResults({
             onClick={() => onSelect(city)}
             className="block w-full cursor-pointer px-4 py-3 text-left text-white aria-selected:bg-accent-600 hover:bg-white/10 aria-selected:hover:bg-accent-600"
           >
-            <span className="block font-medium">{city.name}</span>
-            {location && <span className="block text-sm text-white/80">{location}</span>}
+            <span className="block font-medium [overflow-wrap:anywhere]">{city.name}</span>
+            {location && (
+              <span className="block text-sm text-white/80 [overflow-wrap:anywhere]">
+                {location}
+              </span>
+            )}
           </button>
         );
       })}
