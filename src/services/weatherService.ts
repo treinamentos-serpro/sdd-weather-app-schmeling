@@ -51,8 +51,33 @@ function isMetric(value: unknown): value is number | null {
   return value === null || (typeof value === 'number' && Number.isFinite(value));
 }
 
+function isPercentageMetric(value: unknown): value is number | null {
+  return value === null || (typeof value === 'number' && value >= 0 && value <= 100);
+}
+
 function isOptionalMetric(value: unknown): boolean {
   return value === undefined || isMetric(value);
+}
+
+function isOptionalPercentageMetric(value: unknown): boolean {
+  return value === undefined || isPercentageMetric(value);
+}
+
+function isForecastDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+
+  const timestamp = Date.parse(`${value}T00:00:00Z`);
+  return !Number.isNaN(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
+function hasFiveConsecutiveDates(value: unknown): value is string[] {
+  if (!Array.isArray(value) || value.length !== 5 || !value.every(isForecastDate)) return false;
+
+  return value.every(
+    (date, index) =>
+      index === 0 ||
+      Date.parse(`${date}T00:00:00Z`) - Date.parse(`${value[index - 1]}T00:00:00Z`) === 86_400_000,
+  );
 }
 
 function isGeocodingResult(value: unknown): value is GeocodingResult {
@@ -214,20 +239,12 @@ export async function getWeather(city: City): Promise<WeatherData> {
     payload.current.pressure_msl,
     payload.current.wind_speed_10m,
   ];
-  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   if (
     typeof payload.timezone !== 'string' ||
     !payload.timezone ||
     currentFields.some((value) => !isOptionalMetric(value)) ||
-    !Array.isArray(payload.daily.time) ||
-    payload.daily.time.length !== 5 ||
-    !payload.daily.time.every(
-      (date) =>
-        typeof date === 'string' &&
-        datePattern.test(date) &&
-        !Number.isNaN(Date.parse(`${date}T00:00:00Z`)) &&
-        new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date,
-    )
+    !isOptionalPercentageMetric(payload.current.relative_humidity_2m) ||
+    !hasFiveConsecutiveDates(payload.daily.time)
   ) {
     throw new WeatherServiceError(
       'Os dados meteorológicos recebidos estão incompletos ou inválidos. Tente novamente.',
@@ -242,12 +259,16 @@ export async function getWeather(city: City): Promise<WeatherData> {
     daily.temperature_2m_max,
     daily.precipitation_probability_max,
   ];
+  const precipitationProbabilities = daily.precipitation_probability_max;
   if (
     dailyMetrics.some(
       (values) =>
         values !== undefined &&
         (!Array.isArray(values) || values.length !== 5 || !values.every(isMetric)),
-    )
+    ) ||
+    (precipitationProbabilities !== undefined &&
+      (!Array.isArray(precipitationProbabilities) ||
+        !precipitationProbabilities.every(isPercentageMetric)))
   ) {
     throw new WeatherServiceError(
       'Os dados meteorológicos recebidos estão incompletos ou inválidos. Tente novamente.',

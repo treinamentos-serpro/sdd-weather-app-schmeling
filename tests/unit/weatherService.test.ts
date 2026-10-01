@@ -344,10 +344,79 @@ describe('getWeather', () => {
       daily: { time: Array(5).fill('2026-09-30') },
     },
     { timezone: 'America/Sao_Paulo', current: {}, daily: { time: Array(5).fill('data inválida') } },
+    {
+      timezone: 'America/Sao_Paulo',
+      current: {},
+      daily: { time: ['2026-09-30', '2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03'] },
+    },
+    {
+      timezone: 'America/Sao_Paulo',
+      current: {},
+      daily: { time: ['2026-09-30', '2026-10-01', '2026-10-03', '2026-10-04', '2026-10-05'] },
+    },
   ])('rejeita forecast com tipos incompatíveis: %j', async (payload) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => payload }));
 
     await expect(getWeather(city)).rejects.toBeInstanceOf(WeatherServiceError);
+  });
+
+  it.each([
+    {
+      current: { relative_humidity_2m: -1 },
+      daily: { time: ['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'] },
+    },
+    {
+      current: { relative_humidity_2m: 101 },
+      daily: { time: ['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'] },
+    },
+    {
+      current: {},
+      daily: {
+        time: ['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'],
+        precipitation_probability_max: [-1, 0, 0, 0, 0],
+      },
+    },
+    {
+      current: {},
+      daily: {
+        time: ['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'],
+        precipitation_probability_max: [101, 0, 0, 0, 0],
+      },
+    },
+  ])('rejeita percentuais fora do intervalo de 0 a 100: %j', async ({ current, daily }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ timezone: 'America/Sao_Paulo', current, daily }),
+      }),
+    );
+
+    await expect(getWeather(city)).rejects.toBeInstanceOf(WeatherServiceError);
+  });
+
+  it('aceita percentuais nos limites de 0 e 100', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          timezone: 'America/Sao_Paulo',
+          current: { relative_humidity_2m: 0 },
+          daily: {
+            time: ['2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'],
+            precipitation_probability_max: [0, 100, 50, null, 0],
+          },
+        }),
+      }),
+    );
+
+    const result = await getWeather(city);
+
+    expect(result.current.relativeHumidity).toBe(0);
+    expect(
+      result.forecast.map(({ maximumPrecipitationProbability }) => maximumPrecipitationProbability),
+    ).toEqual([0, 100, 50, undefined, 0]);
   });
 
   it('normaliza métricas ausentes ou nulas sem descartar datas', async () => {
