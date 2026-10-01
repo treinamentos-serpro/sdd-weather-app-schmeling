@@ -24,7 +24,7 @@ const geocodingResults = [
     latitude: 53.22,
     longitude: -4.2,
     admin1: 'Wales',
-    country: 'Reino Unido da Grã-Bretanha e Irlanda do Norte',
+    country: 'ReinoUnidoDaGrãBretanhaEIrlandaDoNorte',
   },
 ];
 
