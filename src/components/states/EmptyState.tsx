@@ -1,17 +1,19 @@
+import { SearchX } from 'lucide-react';
+
 interface EmptyStateProps {
-  title: string;
+  title?: string;
   hint?: string;
 }
 
-/** Estado vazio (nenhuma busca feita ou nenhum resultado). */
-export default function EmptyState({ title, hint }: EmptyStateProps) {
+export default function EmptyState({
+  title = 'Nenhuma cidade encontrada',
+  hint = 'Tente buscar outra cidade.',
+}: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center gap-2 py-16 text-center">
-      <span aria-hidden="true" className="text-4xl">
-        🌍
-      </span>
-      <p className="text-white/80">{title}</p>
-      {hint && <p className="text-sm text-white/50">{hint}</p>}
+    <div className="rounded-lg border border-white/10 bg-white/5 p-5 text-white backdrop-blur-md">
+      <SearchX aria-hidden="true" className="mb-3 h-6 w-6 text-accent-400" />
+      <h2 className="text-lg font-semibold [overflow-wrap:anywhere]">{title}</h2>
+      <p className="mt-1 text-sm text-white/70 [overflow-wrap:anywhere]">{hint}</p>
     </div>
   );
 }

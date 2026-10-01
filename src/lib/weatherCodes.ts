@@ -1,56 +1,61 @@
-/**
- * Mapeia o `weather_code` (WMO) da Open-Meteo para um rótulo em pt-BR e um
- * ícone (emoji). Mantém o domínio de apresentação isolado e testável.
- *
- * Referência: https://open-meteo.com/en/docs (WMO Weather interpretation codes)
- */
+import {
+  CircleHelp,
+  Cloud,
+  CloudDrizzle,
+  CloudFog,
+  CloudLightning,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  type LucideIcon,
+  Sun,
+} from 'lucide-react';
 
-interface WeatherInfo {
+interface WeatherCondition {
   label: string;
-  icon: string;
+  icon: LucideIcon;
 }
 
-const WEATHER_CODE_MAP: Record<number, WeatherInfo> = {
-  0: { label: 'Céu limpo', icon: '☀️' },
-  1: { label: 'Predomínio de sol', icon: '🌤️' },
-  2: { label: 'Parcialmente nublado', icon: '⛅' },
-  3: { label: 'Nublado', icon: '☁️' },
-  45: { label: 'Névoa', icon: '🌫️' },
-  48: { label: 'Névoa com gelo', icon: '🌫️' },
-  51: { label: 'Garoa leve', icon: '🌦️' },
-  53: { label: 'Garoa moderada', icon: '🌦️' },
-  55: { label: 'Garoa intensa', icon: '🌧️' },
-  56: { label: 'Garoa congelante', icon: '🌧️' },
-  57: { label: 'Garoa congelante intensa', icon: '🌧️' },
-  61: { label: 'Chuva fraca', icon: '🌦️' },
-  63: { label: 'Chuva moderada', icon: '🌧️' },
-  65: { label: 'Chuva forte', icon: '🌧️' },
-  66: { label: 'Chuva congelante', icon: '🌧️' },
-  67: { label: 'Chuva congelante forte', icon: '🌧️' },
-  71: { label: 'Neve fraca', icon: '🌨️' },
-  73: { label: 'Neve moderada', icon: '🌨️' },
-  75: { label: 'Neve forte', icon: '❄️' },
-  77: { label: 'Grãos de neve', icon: '🌨️' },
-  80: { label: 'Pancadas de chuva fracas', icon: '🌦️' },
-  81: { label: 'Pancadas de chuva moderadas', icon: '🌧️' },
-  82: { label: 'Pancadas de chuva fortes', icon: '⛈️' },
-  85: { label: 'Pancadas de neve fracas', icon: '🌨️' },
-  86: { label: 'Pancadas de neve fortes', icon: '❄️' },
-  95: { label: 'Trovoadas', icon: '⛈️' },
-  96: { label: 'Trovoadas com granizo', icon: '⛈️' },
-  99: { label: 'Trovoadas com granizo forte', icon: '⛈️' },
-};
-
-const UNKNOWN: WeatherInfo = { label: 'Condição desconhecida', icon: '🌡️' };
-
-export function getWeatherInfo(code: number): WeatherInfo {
-  return WEATHER_CODE_MAP[code] ?? UNKNOWN;
-}
-
-export function getWeatherLabel(code: number): string {
-  return getWeatherInfo(code).label;
-}
-
-export function getWeatherIcon(code: number): string {
-  return getWeatherInfo(code).icon;
+export function getWeatherCondition(code: number | undefined): WeatherCondition {
+  switch (code) {
+    case 0:
+      return { label: 'Céu limpo', icon: Sun };
+    case 1:
+      return { label: 'Predominantemente limpo', icon: CloudSun };
+    case 2:
+      return { label: 'Parcialmente nublado', icon: CloudSun };
+    case 3:
+      return { label: 'Encoberto', icon: Cloud };
+    case 45:
+    case 48:
+      return { label: 'Nevoeiro', icon: CloudFog };
+    case 51:
+    case 53:
+    case 55:
+    case 56:
+    case 57:
+      return { label: 'Garoa', icon: CloudDrizzle };
+    case 61:
+    case 63:
+    case 65:
+    case 66:
+    case 67:
+    case 80:
+    case 81:
+    case 82:
+      return { label: 'Chuva', icon: CloudRain };
+    case 71:
+    case 73:
+    case 75:
+    case 77:
+    case 85:
+    case 86:
+      return { label: 'Neve', icon: CloudSnow };
+    case 95:
+    case 96:
+    case 99:
+      return { label: 'Tempestade', icon: CloudLightning };
+    default:
+      return { label: 'Indisponível', icon: CircleHelp };
+  }
 }
